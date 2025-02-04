@@ -2,6 +2,8 @@ import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:pookieapp/pages/ask.dart';
+import 'package:pookieapp/pages/learn_Lang.dart';
+import 'package:pookieapp/screens/account_screen.dart';
 import 'package:pookieapp/theme/boy.dart';
 import 'package:pookieapp/theme/themeProvider.dart';
 import 'package:provider/provider.dart';
@@ -28,40 +30,83 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       drawer: Drawer(
-        backgroundColor: Theme.of(context).primaryColor, // Full color background
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor,
+  backgroundColor: Theme.of(context).primaryColor, // Full color background
+  child: Stack(
+    children: [
+      ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.secondary,
+            ),
+            child: Text(
+              'Pookie',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 26,
               ),
-              child: Text(
-                'Menu',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.home, color: Colors.white),
+            title: Text('Home', style: TextStyle(color: Colors.white)),
+            onTap: () => Navigator.pop(context),
+          ),
+          ListTile(
+            leading: Icon(Icons.settings, color: Colors.white),
+            title: Text('Settings', style: TextStyle(color: Colors.white)),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AccountScreen()),
+              );
+            },//AccountScreen
+          ),
+          ListTile(
+            leading: Icon(Icons.logout, color: Colors.white),
+            title: Text('Logout', style: TextStyle(color: Colors.white)),
+            onTap: signUserOut,
+          ),
+          const SizedBox(height: 20), // Adds space after the logout button
+          // Theme switch
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 16.0), // Adds space from the left
+                child: Text(
+                  'Theme',
+                  style: TextStyle(color: Colors.white, fontSize: 20),
                 ),
               ),
-            ),
-            ListTile(
-              leading: Icon(Icons.home, color: Colors.white),
-              title: Text('Home', style: TextStyle(color: Colors.white)),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: Icon(Icons.settings, color: Colors.white),
-              title: Text('Settings', style: TextStyle(color: Colors.white)),
-              onTap: () {},
-            ),
-            ListTile(
-              leading: Icon(Icons.logout, color: Colors.white),
-              title: Text('Logout', style: TextStyle(color: Colors.white)),
-              onTap: signUserOut,
-            ),
-          ],
+              const SizedBox(width: 10), // Space between text and switch
+              Switch(
+                value: themeProvider.currentTheme == boyTheme,
+                onChanged: (bool isBoyTheme) {
+                  themeProvider.toggleTheme(isBoyTheme);
+                },
+                activeColor: Theme.of(context).colorScheme.secondary,
+                inactiveThumbColor: Theme.of(context).primaryColor,
+                inactiveTrackColor: Theme.of(context).colorScheme.secondary, 
+              ),
+            ],
+          ),
+        ],
+      ),
+      Positioned(
+        top: 95, // Adjust as needed
+        right: 50,
+        child: Image.asset(
+          'assets/cat1.png',
+          width: 100,
+          height: 100,
         ),
       ),
+    ],
+  ),
+)
+,
       body: Stack(
         children: [
           Positioned.fill(
@@ -81,14 +126,17 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           Positioned(
-            top: 40,
-            left: 20,
-            child: IconButton(
-              icon: Icon(Icons.menu, color: Colors.white, size: 30),
-              onPressed: () => Scaffold.of(context).openDrawer(),
-            ),
-          ),
-          ElevatedButton(
+  top: 40,
+  left: 20,
+  child: Builder(
+    builder: (context) => IconButton(
+      icon: Icon(Icons.menu, color: Theme.of(context).colorScheme.secondary, size: 30),
+      onPressed: () => Scaffold.of(context).openDrawer(),
+    ),
+  ),
+),
+
+          /*ElevatedButton(
             onPressed: () {
               themeProvider.toggleTheme(themeProvider.currentTheme == boyTheme ? false : true);
             },
@@ -97,7 +145,7 @@ class _HomePageState extends State<HomePage> {
               "Switch Theme",
               style: TextStyle(color: Colors.white),
             ),
-          ),
+          ),*/
 
           Center(
             child: Column(
@@ -121,6 +169,10 @@ class _HomePageState extends State<HomePage> {
                     }),
                     const SizedBox(width: 25),
                     buildSmallButton('Learn Languages', Theme.of(context).colorScheme.primary, () {
+                      Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => LearnPage()),
+                  );
                     }),
                   ],
                 ),
@@ -134,7 +186,7 @@ class _HomePageState extends State<HomePage> {
             right: 0,
             child: CurvedNavigationBar(
               backgroundColor: Colors.transparent,
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withOpacity(0.5),
               animationDuration: const Duration(milliseconds: 300),
               items: const [
                 Icon(Icons.home, color: Colors.black),
