@@ -1,9 +1,9 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:pookieapp/pages/start.dart';
-import 'package:pookieapp/pages/auth_page.dart';
-import 'package:pookieapp/theme/themeProvider.dart';
+import 'package:pookie/pages/start.dart';
+import 'package:pookie/pages/auth_page.dart';
+import 'package:pookie/theme/themeProvider.dart';
 import 'package:provider/provider.dart';
 
 void main() async{
