@@ -1,11 +1,11 @@
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:pookieapp/pages/ask.dart';
-import 'package:pookieapp/pages/learn_Lang.dart';
-import 'package:pookieapp/screens/account_screen.dart';
-import 'package:pookieapp/theme/boy.dart';
-import 'package:pookieapp/theme/themeProvider.dart';
+import 'package:pookie/askPookie/chat_Bot.dart';
+import 'package:pookie/pages/learn_Lang.dart';
+import 'package:pookie/pages/storytelling.dart';
+import 'package:pookie/theme/boy.dart';
+import 'package:pookie/theme/themeProvider.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
@@ -59,7 +59,7 @@ class _HomePageState extends State<HomePage> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => AccountScreen()),
+                MaterialPageRoute(builder: (context) => HomePage()),//AccountScreen()
               );
             },//AccountScreen
           ),
@@ -156,7 +156,8 @@ class _HomePageState extends State<HomePage> {
                  () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const AskPage()),
+                    //MaterialPageRoute(builder: (context) => const AskPage()),
+                    MaterialPageRoute(builder: (context) => const ChatBotPage()),
                   );
                 }),
 
@@ -166,6 +167,10 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     buildSmallButton('Storytelling', Theme.of(context).colorScheme.secondary, () {
+                      Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => TextCorrectionScreen()),
+                  );
                     }),
                     const SizedBox(width: 25),
                     buildSmallButton('Learn Languages', Theme.of(context).colorScheme.primary, () {

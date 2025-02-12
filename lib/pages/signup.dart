@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:pookieapp/pages/login_page.dart';
-import 'package:pookieapp/auth/auth_services.dart';
-import 'package:pookieapp/pages/home.dart';
+import 'package:pookie/pages/login_page.dart';
+import 'package:pookie/auth/auth_services.dart';
+import 'package:pookie/pages/home.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 

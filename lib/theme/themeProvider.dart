@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pookieapp/theme/girl.dart';
-import 'package:pookieapp/theme/boy.dart';
+import 'package:pookie/theme/girl.dart';
+import 'package:pookie/theme/boy.dart';
 
 
 class ThemeProvider with ChangeNotifier {

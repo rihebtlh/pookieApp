@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pookieapp/pages/auth_page.dart'; // Ensure the path is correct
+import 'package:pookie/pages/auth_page.dart'; // Ensure the path is correct
 
 class Start extends StatefulWidget {
   const Start({super.key});
@@ -38,7 +38,7 @@ class _StartState extends State<Start> {
             bottom: 245, // Adjust spacing between image and button icon
             left: 200,
             child: Image.asset(
-              'assets/catr.png', // Image above the button
+              'assets/catr.png',
               width: 100,
               height: 100,
             ),

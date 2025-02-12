@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:pookieapp/auth/auth_services.dart';
-import 'package:pookieapp/pages/forgetPass.dart';
-import 'package:pookieapp/pages/signup.dart';
+import 'package:pookie/auth/auth_services.dart';
+import 'package:pookie/pages/forgetPass.dart';
+import 'package:pookie/pages/signup.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
