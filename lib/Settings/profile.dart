@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ionicons/ionicons.dart';
+import 'package:pookie/pages/user_profile.dart';
 import 'package:provider/provider.dart';
-import 'user_profile.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -14,17 +14,14 @@ class _ProfilePageState extends State<ProfilePage> {
   final _formKey = GlobalKey<FormState>();
   
   // Controllers for the text fields
-  late TextEditingController _firstNameController;
-  late TextEditingController _lastNameController;
+  late TextEditingController _nameController;
   late TextEditingController _emailController;
-  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     // Initialize controllers with empty values, will be filled once data is loaded
-    _firstNameController = TextEditingController();
-    _lastNameController = TextEditingController();
+    _nameController = TextEditingController();
     _emailController = TextEditingController();
     
     // Load data from provider
@@ -33,24 +30,32 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _loadUserData() {
     final userProfile = Provider.of<UserProfileProvider>(context, listen: false).profile;
-    _firstNameController.text = userProfile.firstName;
-    _lastNameController.text = userProfile.lastName;
+    _nameController.text = userProfile.name;
     _emailController.text = userProfile.email;
   }
 
   Future<void> _updateProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    // Show loading dialog (similar to login page)
+    showDialog(
+      context: context, 
+      barrierDismissible: false,
+      builder: (context) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      }
+    );
 
     try {
       // Update the profile in the provider (which updates Firestore)
       await Provider.of<UserProfileProvider>(context, listen: false).updateProfile(
-        firstName: _firstNameController.text,
-        lastName: _lastNameController.text,
+        name: _nameController.text,
       );
+      
+      // Pop the loading dialog
+      Navigator.pop(context);
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -58,16 +63,13 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       }
     } catch (e) {
+      // Pop the loading dialog
+      Navigator.pop(context);
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error updating profile: $e')),
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
       }
     }
   }
@@ -79,10 +81,25 @@ class _ProfilePageState extends State<ProfilePage> {
     final isLoadingProfile = userProfileProvider.isLoading;
     
     // If we're still loading data initially, show a loading indicator
-    if (isLoadingProfile && _firstNameController.text.isEmpty) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
+    if (isLoadingProfile && _nameController.text.isEmpty) {
+      return Scaffold(
+        body: Stack(
+          children: [
+            // Background image
+            Positioned.fill(
+              child: Image.asset(
+                'assets/Profile.png',
+                fit: BoxFit.cover,
+              ),
+            ),
+            // Transparent loading overlay
+            Container(
+              color: Colors.black.withOpacity(0.3),
+              child: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -126,6 +143,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
+                                color: Color.fromARGB(255, 15, 15, 15),
                               ),
                             ),
                           ],
@@ -137,26 +155,27 @@ class _ProfilePageState extends State<ProfilePage> {
                         top: 20,
                         child: Image.asset(
                           'assets/catice.png',
-                          height: 80,
+                          height: 150,
                         ),
                       ),
                       
-                      // First Name Field
+                      // Name Field
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'First Name',
+                              'Name',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
+                                color: Color.fromARGB(255, 15, 15, 15),
                               ),
                             ),
                             const SizedBox(height: 8),
                             TextFormField(
-                              controller: _firstNameController,
+                              controller: _nameController,
                               decoration: InputDecoration(
                                 filled: true,
                                 fillColor: Colors.white,
@@ -166,45 +185,10 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                                 suffixIcon: const Icon(Icons.edit, color: Color.fromARGB(255, 185, 184, 184)),
                               ),
+                              style: const TextStyle(color: Colors.black),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Please enter your first name';
-                                }
-                                return null;
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      
-                      // Last Name Field
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Last Name',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            TextFormField(
-                              controller: _lastNameController,
-                              decoration: InputDecoration(
-                                filled: true,
-                                fillColor: Colors.white,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
-                                ),
-                                suffixIcon: const Icon(Icons.edit, color: Color.fromARGB(255, 175, 175, 175)),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your last name';
+                                  return 'Please enter your name';
                                 }
                                 return null;
                               },
@@ -224,6 +208,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
+                                color: Color.fromARGB(255, 15, 15, 15),
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -239,16 +224,17 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                                 suffixIcon: const Icon(Icons.edit, color: Color.fromARGB(255, 216, 216, 216)),
                               ),
+                              style: const TextStyle(color: Colors.black),
                             ),
                           ],
                         ),
                       ),
                       
-                      // Save Button - with loading indicator
+                      // Save Button
                       Container(
                         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                         child: ElevatedButton(
-                          onPressed: _isLoading ? null : _updateProfile,
+                          onPressed: _updateProfile,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color.fromARGB(255, 162, 111, 208),
                             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -257,16 +243,14 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             minimumSize: const Size(double.infinity, 50),
                           ),
-                          child: _isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text(
-                                'Save Changes',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
+                          child: const Text(
+                            'Save Changes',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -282,8 +266,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
+    _nameController.dispose();
     _emailController.dispose();
     super.dispose();
   }

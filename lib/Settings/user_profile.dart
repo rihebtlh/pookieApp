@@ -1,29 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 
 // User profile model
 class UserProfile {
-  String firstName;
-  String lastName;
+  String name;
   String email;
-  String uid; // Add UID to track the user
+  String uid;
 
   UserProfile({
-    required this.firstName,
-    required this.lastName, 
+    required this.name,
     required this.email,
     required this.uid,
   });
 
-  // Getter for full name
-  String get fullName => "$firstName $lastName";
+  // Getter for full name (keeping for backward compatibility)
+  String get fullName => name;
 
   // Convert to Map for Firestore
   Map<String, dynamic> toMap() {
     return {
-      'firstName': firstName,
-      'lastName': lastName,
+      'name': name,
       'email': email,
     };
   }
@@ -32,9 +30,15 @@ class UserProfile {
   factory UserProfile.fromDocument(DocumentSnapshot doc, String email) {
     final data = doc.data() as Map<String, dynamic>;
     
+    // Handle both old format (firstName/lastName) and new format (name)
+    String name = data['name'] ?? '';
+    if (name.isEmpty && data['firstName'] != null) {
+      // Convert old format to new format
+      name = "${data['firstName'] ?? ''} ${data['lastName'] ?? ''}".trim();
+    }
+    
     return UserProfile(
-      firstName: data['firstName'] ?? '',
-      lastName: data['lastName'] ?? '',
+      name: name,
       email: email, // Email comes from Firebase Auth
       uid: doc.id,
     );
@@ -45,11 +49,11 @@ class UserProfile {
 class UserProfileProvider extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  StreamSubscription<User?>? _authListener;
   
   // Default empty profile
   UserProfile _userProfile = UserProfile(
-    firstName: "",
-    lastName: "",
+    name: "",
     email: "",
     uid: "",
   );
@@ -64,7 +68,22 @@ class UserProfileProvider extends ChangeNotifier {
 
   // Constructor - fetch user data when provider is created
   UserProfileProvider() {
-    loadUserProfile();
+    // Set up auth state listener
+    _authListener = _auth.authStateChanges().listen((User? user) {
+      if (user != null) {
+        loadUserProfile();
+      } else {
+        // Clear profile when logged out
+        _userProfile = UserProfile(name: "", email: "", uid: "");
+        notifyListeners();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authListener?.cancel();
+    super.dispose();
   }
 
   // Fetch user data from Firestore
@@ -96,8 +115,7 @@ class UserProfileProvider extends ChangeNotifier {
       } else {
         // If no document exists yet, create one with default values
         _userProfile = UserProfile(
-          firstName: currentUser.displayName?.split(' ').first ?? '',
-          lastName: currentUser.displayName?.split(' ').last ?? '',
+          name: currentUser.displayName ?? '',
           email: currentUser.email ?? '',
           uid: currentUser.uid,
         );
@@ -118,8 +136,7 @@ class UserProfileProvider extends ChangeNotifier {
 
   // Update profile both locally and in Firestore
   Future<void> updateProfile({
-    String? firstName, 
-    String? lastName,
+    String? name,
     String? email
   }) async {
     try {
@@ -127,8 +144,7 @@ class UserProfileProvider extends ChangeNotifier {
       notifyListeners();
       
       // Update local profile
-      if (firstName != null) _userProfile.firstName = firstName;
-      if (lastName != null) _userProfile.lastName = lastName;
+      if (name != null) _userProfile.name = name;
       if (email != null) _userProfile.email = email;
       
       // Update in Firestore
@@ -138,8 +154,8 @@ class UserProfileProvider extends ChangeNotifier {
           .update(_userProfile.toMap());
       
       // Update display name in Firebase Auth if needed
-      if (firstName != null || lastName != null) {
-        await _auth.currentUser?.updateDisplayName(_userProfile.fullName);
+      if (name != null) {
+        await _auth.currentUser?.updateDisplayName(_userProfile.name);
       }
       
       _error = '';

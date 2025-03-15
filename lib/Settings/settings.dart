@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:ionicons/ionicons.dart';
+import 'package:pookie/pages/login_page.dart';
+import 'package:pookie/pages/profile.dart';
+import 'package:pookie/pages/terms_conditions.dart';
+import 'package:pookie/pages/user_profile.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'user_profile.dart';
-import 'profile.dart';
-import 'terms_conditions.dart';
-import 'login_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key? key}) : super(key: key);
@@ -51,6 +51,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 15, 15, 15),
                           ),
                         ),
                       ],
@@ -78,6 +79,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
+                                color: Color.fromARGB(255, 15, 15, 15),
                               ),
                             ),
                             Text(
@@ -121,6 +123,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
+                            color: Color.fromARGB(255, 15, 15, 15),
                           ),
                         ),
                         Switch(
@@ -165,6 +168,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
+                              color: Color.fromARGB(255, 15, 15, 15),
                             ),
                           ),
                           Icon(Ionicons.chevron_forward, color: Colors.black),
@@ -186,7 +190,10 @@ class _SettingsPageState extends State<SettingsPage> {
                           // Sign out with Firebase
                           await FirebaseAuth.instance.signOut();
                           // Navigate to login screen
-                          Navigator.pushReplacementNamed(context, '/loginPage');
+                          Navigator.pushReplacement(
+                          context,
+                            MaterialPageRoute(builder: (context) => const LoginPage()),
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color.fromARGB(255, 245, 220, 248),
