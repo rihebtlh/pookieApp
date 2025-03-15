@@ -1,9 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:pookie/pages/login_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pookie/auth/auth_services.dart';
 import 'package:pookie/pages/home.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:pookie/pages/login_page.dart';
+import 'package:pookie/pages/terms_conditions.dart';
 
 
 class SignUp extends StatefulWidget {
@@ -99,12 +100,16 @@ class _SignUpState extends State<SignUp> {
     );
   }
   Future addUserDetails(String name, int age, String email) async {
-    await FirebaseFirestore.instance.collection('users').add({
-      'name': name,
-      'age': age,
-      'email': email,
-    });
-  }
+  // Get the current user's UID
+  String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+  
+  // Use the UID as the document ID instead of using .add()
+  await FirebaseFirestore.instance.collection('users').doc(uid).set({
+    'name': name,
+    'age': age,
+    'email': email,
+  });
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -269,7 +274,12 @@ class _SignUpState extends State<SignUp> {
                           alignment: Alignment.centerRight,
                           child: TextButton(
                             onPressed: () {
-                              // Add terms and conditions logic
+                              // Add terms and conNavigator.pop(context);
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => const TermsConditions(fromScreen: 'settings'),
+                                )
+                              );
                             },
                             child: const Text(
                               'Terms and Conditions',
