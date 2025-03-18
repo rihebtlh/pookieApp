@@ -1,8 +1,9 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:pookie/pages/start.dart';
 import 'package:pookie/pages/auth_page.dart';
+import 'package:pookie/pages/start.dart';
+import 'package:pookie/pages/user_profile.dart';
 import 'package:pookie/theme/themeProvider.dart';
 import 'package:provider/provider.dart';
 
@@ -24,11 +25,14 @@ void main() async{
     await Firebase.initializeApp();
   }
   runApp(
-    MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => ThemeProvider()),],
-      child: const MyApp(),
-    )
-  );
+  MultiProvider(
+    providers: [
+      ChangeNotifierProvider(create: (_) => ThemeProvider()),
+      ChangeNotifierProvider(create: (_) => UserProfileProvider()),
+    ],
+    child: const MyApp(),
+  )
+);
 }
 
 class MyApp extends StatelessWidget {
