@@ -65,11 +65,19 @@ flutter:
   # assets:
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
-  assets:
+   assets:
     - assets/
     - assets/google.webp
     - assets/stars.png
-
+    - assets/profiles/green.png
+    - assets/profiles/purple.png
+    - assets/profiles/iceblue.png
+    - assets/profiles/lightpink.png
+    - assets/profiles/yellow.png
+    - assets/profiles/darkblue.png
+    - assets/profiles/blue.png
+    - assets/profiles/pinkbigeyes.png
+    - assets/profiles/pink.png
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
   # For details regarding adding assets from package dependencies, see
