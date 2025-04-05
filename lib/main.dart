@@ -6,6 +6,7 @@ import 'package:pookie/pages/start.dart';
 import 'package:pookie/pages/user_profile.dart';
 import 'package:pookie/theme/themeProvider.dart';
 import 'package:provider/provider.dart';
+import 'package:pookie/pages/quiz/quiz_provider.dart';
 
 void main() async{
   //ensures that the bindings with the native platform has been created 
@@ -29,6 +30,7 @@ void main() async{
     providers: [
       ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ChangeNotifierProvider(create: (_) => UserProfileProvider()),
+      ChangeNotifierProvider(create: (_) => QuizProvider()),
     ],
     child: const MyApp(),
   )
