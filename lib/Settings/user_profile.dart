@@ -3,16 +3,21 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 
+// Define the standard profile picture path as a constant
+const String STANDARD_PROFILE_PICTURE = 'assets/standard.png';
+
 // User profile model
 class UserProfile {
   String name;
   String email;
   String uid;
+  String profilePicture;
 
   UserProfile({
     required this.name,
     required this.email,
     required this.uid,
+    this.profilePicture = STANDARD_PROFILE_PICTURE, // Use the constant here
   });
 
   // Getter for full name (keeping for backward compatibility)
@@ -23,6 +28,7 @@ class UserProfile {
     return {
       'name': name,
       'email': email,
+      'profilePicture': profilePicture,
     };
   }
 
@@ -41,11 +47,12 @@ class UserProfile {
       name: name,
       email: email, // Email comes from Firebase Auth
       uid: doc.id,
+      profilePicture: data['profilePicture'] ?? STANDARD_PROFILE_PICTURE,
     );
   }
 }
 
-// Provider that handles Firebase interaction
+// Updated Provider that handles Firebase interaction
 class UserProfileProvider extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -56,6 +63,7 @@ class UserProfileProvider extends ChangeNotifier {
     name: "",
     email: "",
     uid: "",
+    profilePicture: STANDARD_PROFILE_PICTURE,
   );
   
   bool _isLoading = false;
@@ -74,7 +82,12 @@ class UserProfileProvider extends ChangeNotifier {
         loadUserProfile();
       } else {
         // Clear profile when logged out
-        _userProfile = UserProfile(name: "", email: "", uid: "");
+        _userProfile = UserProfile(
+          name: "", 
+          email: "", 
+          uid: "",
+          profilePicture: STANDARD_PROFILE_PICTURE,
+        );
         notifyListeners();
       }
     });
@@ -118,6 +131,7 @@ class UserProfileProvider extends ChangeNotifier {
           name: currentUser.displayName ?? '',
           email: currentUser.email ?? '',
           uid: currentUser.uid,
+          profilePicture: STANDARD_PROFILE_PICTURE,
         );
         
         // Save the initial profile to Firestore
@@ -137,7 +151,8 @@ class UserProfileProvider extends ChangeNotifier {
   // Update profile both locally and in Firestore
   Future<void> updateProfile({
     String? name,
-    String? email
+    String? email,
+    String? profilePicture
   }) async {
     try {
       _isLoading = true;
@@ -146,6 +161,7 @@ class UserProfileProvider extends ChangeNotifier {
       // Update local profile
       if (name != null) _userProfile.name = name;
       if (email != null) _userProfile.email = email;
+      if (profilePicture != null) _userProfile.profilePicture = profilePicture;
       
       // Update in Firestore
       await _firestore
@@ -161,6 +177,30 @@ class UserProfileProvider extends ChangeNotifier {
       _error = '';
     } catch (e) {
       _error = 'Failed to update profile: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+  
+  // New method specifically for removing profile picture
+  Future<void> removeProfilePicture() async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+      
+      // Set profile picture to standard
+      _userProfile.profilePicture = STANDARD_PROFILE_PICTURE;
+      
+      // Update in Firestore
+      await _firestore
+          .collection('users')
+          .doc(_userProfile.uid)
+          .update(_userProfile.toMap());
+      
+      _error = '';
+    } catch (e) {
+      _error = 'Failed to remove profile picture: $e';
     } finally {
       _isLoading = false;
       notifyListeners();
