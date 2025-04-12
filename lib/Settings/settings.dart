@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:pookie/pages/login_page.dart';
@@ -60,7 +61,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   
                   const SizedBox(height: 100),
                   
-                  // User info card - Now using data from Firebase
+                  // User info card 
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 20),
                     padding: const EdgeInsets.all(16),
@@ -69,28 +70,57 @@ class _SettingsPageState extends State<SettingsPage> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              userProfile.fullName,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Color.fromARGB(255, 15, 15, 15),
+                        // Profile Picture Circle
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: const Color.fromARGB(255, 237, 191, 237),
+                              width: 2,
+                            ),
+                            color: Colors.white,
+                          ),
+                          child: ClipOval(
+                            child: Padding(
+                              padding: const EdgeInsets.all(5),
+                              child: Image.asset(
+                                userProfile.profilePicture,
+                                fit: BoxFit.contain,
                               ),
                             ),
-                            Text(
-                              userProfile.email,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Color.fromARGB(255, 79, 78, 78),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
+                        
+                        const SizedBox(width: 15),
+                        
+                        // User Info
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                userProfile.fullName,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color.fromARGB(255, 15, 15, 15),
+                                ),
+                              ),
+                              Text(
+                                userProfile.email,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color.fromARGB(255, 79, 78, 78),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        // Edit Button
                         IconButton(
                           icon: const Icon(Icons.edit, color: Colors.white),
                           onPressed: () {
