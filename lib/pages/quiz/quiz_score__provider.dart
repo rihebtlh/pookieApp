@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class QuizScore {
   final int correctAnswers;
@@ -35,6 +35,9 @@ class QuizScore {
 }
 
 class QuizScoreProvider with ChangeNotifier {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  
   List<QuizScore> _scores = [];
   bool _isLoading = false;
 
@@ -45,23 +48,42 @@ class QuizScoreProvider with ChangeNotifier {
   QuizScore? get latestScore => _scores.isNotEmpty ? _scores.first : null;
 
   QuizScoreProvider() {
-    loadScores();
+    // Listen for authentication state changes
+    _auth.authStateChanges().listen((User? user) {
+      if (user != null) {
+        // User logged in, load their scores
+        loadScores();
+      } else {
+        // User logged out, clear the scores
+        _scores = [];
+        notifyListeners();
+      }
+    });
   }
 
   Future<void> loadScores() async {
+    User? currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      _scores = [];
+      notifyListeners();
+      return;
+    }
+
     _isLoading = true;
     notifyListeners();
     
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final scoresJson = prefs.getStringList('quiz_scores') ?? [];
+      // Get scores from Firestore for the current user
+      final QuerySnapshot querySnapshot = await _firestore
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('quiz_scores')
+          .orderBy('timestamp', descending: true)
+          .get();
       
-      _scores = scoresJson
-          .map((scoreJson) => QuizScore.fromMap(jsonDecode(scoreJson)))
+      _scores = querySnapshot.docs
+          .map((doc) => QuizScore.fromMap(doc.data() as Map<String, dynamic>))
           .toList();
-      
-      // Sort scores by timestamp, most recent first
-      _scores.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     } catch (e) {
       print('Error loading scores: $e');
       _scores = [];
@@ -72,19 +94,25 @@ class QuizScoreProvider with ChangeNotifier {
   }
 
   Future<void> saveScore(QuizScore score) async {
+    User? currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      print('Cannot save score: No user is logged in');
+      return;
+    }
+
     _isLoading = true;
     notifyListeners();
     
     try {
-      // Add new score to the list
-      _scores.insert(0, score);
+      // Add new score to Firestore
+      await _firestore
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('quiz_scores')
+          .add(score.toMap());
       
-      // Save to SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      final scoresJson = _scores.map((score) => 
-          jsonEncode(score.toMap())).toList();
-      
-      await prefs.setStringList('quiz_scores', scoresJson);
+      // Reload scores to reflect the update
+      await loadScores();
     } catch (e) {
       print('Error saving score: $e');
     } finally {
@@ -94,13 +122,32 @@ class QuizScoreProvider with ChangeNotifier {
   }
   
   Future<void> clearScores() async {
+    User? currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      print('Cannot clear scores: No user is logged in');
+      return;
+    }
+
     _isLoading = true;
     notifyListeners();
     
     try {
+      // Get all score documents
+      QuerySnapshot snapshot = await _firestore
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('quiz_scores')
+          .get();
+      
+      // Delete each document in a batch
+      WriteBatch batch = _firestore.batch();
+      for (var doc in snapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+      
+      // Clear the local list
       _scores = [];
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('quiz_scores');
     } catch (e) {
       print('Error clearing scores: $e');
     } finally {
