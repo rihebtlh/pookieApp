@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:pookie/pages/quiz/quiz_question.dart';
+import 'package:pookie/pages/quiz/quiz_score__provider.dart';
 import 'package:pookie/services/firebase_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -7,6 +8,8 @@ import 'dart:math';
 
 class QuizProvider with ChangeNotifier {
   final FirebaseService _firebaseService = FirebaseService();
+  final QuizScoreProvider _scoreProvider; // Add reference to score provider
+  
   List<QuizQuestion> _questions = [];
   int _currentQuestionIndex = 0;
   int _score = 0;
@@ -34,7 +37,10 @@ class QuizProvider with ChangeNotifier {
   bool get answerLocked => _answerLocked;
   bool get quizInProgress => _quizInProgress;
 
-   Future<void> loadQuestions() async {
+  // Constructor with QuizScoreProvider dependency
+  QuizProvider(this._scoreProvider);
+
+  Future<void> loadQuestions() async {
     // Check if there's a saved quiz state
     final savedState = await _loadSavedState();
     
@@ -58,12 +64,11 @@ class QuizProvider with ChangeNotifier {
         _savedQuestionStates = savedState['savedQuestionStates'] != null
             ? List<Map<String, dynamic>>.from(savedState['savedQuestionStates'])
             : [];
-            // Ensure we're always starting from the first question when explicitly restarting
+        // Ensure we're always starting from the first question when explicitly restarting
         if (_currentQuestionIndex > 0 && _savedQuestionStates.isEmpty) {
           _currentQuestionIndex = 0;
         }
       } catch (e) {
-        // If there's any error in parsing the saved state, start a fresh quiz
         print('Error loading saved quiz state: $e');
         await _startFreshQuiz();
       }
@@ -159,6 +164,9 @@ class QuizProvider with ChangeNotifier {
     } else {
       _isQuizFinished = true;
       _quizInProgress = false;
+      
+      // Save the final score when quiz is finished
+      _saveQuizScore(true);
     }
     
     _saveCurrentState();
@@ -166,26 +174,42 @@ class QuizProvider with ChangeNotifier {
   }
 
   void resetQuiz() {
-  _currentQuestionIndex = 0;
-  _score = 0;
-  _isQuizFinished = false;
-  _selectedAnswer = null;
-  _answerLocked = false;
-  _quizInProgress = true;  // Change this to true instead of false
-  _savedQuestionStates = [];
-  
-  _clearSavedState();
-  
-  
-  _startFreshQuiz().then((_) {
-    _saveCurrentState();
-    notifyListeners();
-  });
-}
+    _currentQuestionIndex = 0;
+    _score = 0;
+    _isQuizFinished = false;
+    _selectedAnswer = null;
+    _answerLocked = false;
+    _quizInProgress = true;
+    _savedQuestionStates = [];
+    
+    _clearSavedState();
+    
+    _startFreshQuiz().then((_) {
+      _saveCurrentState();
+      notifyListeners();
+    });
+  }
   
   void quitQuiz() {
+    // Save the current score when quitting
+    if (_quizInProgress) {
+      _saveQuizScore(false);
+    }
+    
     _saveCurrentState();
     notifyListeners();
+  }
+  
+  // New method to save scores to the QuizScoreProvider
+  Future<void> _saveQuizScore(bool isCompleted) async {
+    final QuizScore score = QuizScore(
+      correctAnswers: _score,
+      totalQuestions: 50, // Hardcoded as per requirement
+      isCompleted: isCompleted,
+      timestamp: DateTime.now(),
+    );
+    
+    await _scoreProvider.saveScore(score);
   }
 
   String getFeedbackMessage() {
