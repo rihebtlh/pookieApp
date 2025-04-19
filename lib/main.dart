@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pookie/pages/auth_page.dart';
+import 'package:pookie/pages/quiz/quiz_score__provider.dart';
 import 'package:pookie/pages/start.dart';
 import 'package:pookie/pages/user_profile.dart';
 import 'package:pookie/theme/themeProvider.dart';
@@ -30,7 +31,14 @@ void main() async{
     providers: [
       ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ChangeNotifierProvider(create: (_) => UserProfileProvider()),
-      ChangeNotifierProvider(create: (_) => QuizProvider()),
+      // First create QuizScoreProvider
+      ChangeNotifierProvider(create: (_) => QuizScoreProvider()),
+      // Then create QuizProvider that depends on it
+      ChangeNotifierProxyProvider<QuizScoreProvider, QuizProvider>(
+        create: (context) => QuizProvider(Provider.of<QuizScoreProvider>(context, listen: false)),
+        update: (context, scoreProvider, previous) => 
+          previous ?? QuizProvider(scoreProvider),
+      ),
     ],
     child: const MyApp(),
   )
