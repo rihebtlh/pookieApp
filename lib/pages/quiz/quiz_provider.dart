@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+  import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pookie/pages/quiz/quiz_question.dart';
 import 'package:pookie/pages/quiz/quiz_score__provider.dart';
 import 'package:pookie/services/firebase_service.dart';
@@ -227,10 +228,20 @@ class QuizProvider with ChangeNotifier {
       return "Don't give up ! practice makes perfect! 📚";
     }
   }
-  
+
+// Add this as a class member
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // Update _saveCurrentState method
   Future<void> _saveCurrentState() async {
+    User? currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      print('Cannot save quiz state: No user is logged in');
+      return;
+    }
+
     final prefs = await SharedPreferences.getInstance();
-    
+  
     // Convert questions to a format that can be saved
     final questionsToSave = _questions.map((q) => q.toMap()).toList();
     
@@ -246,12 +257,22 @@ class QuizProvider with ChangeNotifier {
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
     
-    await prefs.setString('quiz_state', jsonEncode(quizState));
+    // Store with user ID in the key to separate different users' data
+    await prefs.setString('quiz_state_${currentUser.uid}', jsonEncode(quizState));
   }
-  
+
+  // Update _loadSavedState method
   Future<Map<String, dynamic>?> _loadSavedState() async {
+    User? currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      print('Cannot load quiz state: No user is logged in');
+      return null;
+    }
+
     final prefs = await SharedPreferences.getInstance();
-    final savedStateString = prefs.getString('quiz_state');
+    
+    // Use the user ID in the key
+    final savedStateString = prefs.getString('quiz_state_${currentUser.uid}');
     
     if (savedStateString != null) {
       return jsonDecode(savedStateString) as Map<String, dynamic>;
@@ -259,9 +280,16 @@ class QuizProvider with ChangeNotifier {
     
     return null;
   }
-  
+
+  // Update _clearSavedState method
   Future<void> _clearSavedState() async {
+    User? currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      print('Cannot clear quiz state: No user is logged in');
+      return;
+    }
+    
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('quiz_state');
-  }
+    await prefs.remove('quiz_state_${currentUser.uid}');
+}
 }
