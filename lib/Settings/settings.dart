@@ -1,12 +1,14 @@
-
 import 'package:flutter/material.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:pookie/pages/login_page.dart';
 import 'package:pookie/pages/profile.dart';
+import 'package:pookie/pages/quiz/quiz_score__provider.dart';
+import 'package:pookie/pages/quiz/quiz_screen.dart';
 import 'package:pookie/pages/terms_conditions.dart';
 import 'package:pookie/pages/user_profile.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key? key}) : super(key: key);
@@ -24,17 +26,21 @@ class _SettingsPageState extends State<SettingsPage> {
     final userProfileProvider = Provider.of<UserProfileProvider>(context);
     final userProfile = userProfileProvider.profile;
     final isLoading = userProfileProvider.isLoading;
+    
+    // Get quiz score provider
+    final quizScoreProvider = Provider.of<QuizScoreProvider>(context);
+    final latestScore = quizScoreProvider.latestScore;
 
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/Setting.png'),
+            image: AssetImage('assets/Settings.png'),
             fit: BoxFit.cover,
           ),
         ),
         child: SafeArea(
-          child: isLoading 
+          child: isLoading || quizScoreProvider.isLoading
             ? const Center(child: CircularProgressIndicator())
             : Column(
                 children: [
@@ -59,7 +65,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                   ),
                   
-                  const SizedBox(height: 100),
+                  const SizedBox(height: 90),
                   
                   // User info card 
                   Container(
@@ -68,6 +74,18 @@ class _SettingsPageState extends State<SettingsPage> {
                     decoration: BoxDecoration(
                       color: const Color.fromARGB(255, 245, 220, 248),
                       borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color.fromARGB(255, 237, 191, 237),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.purple.withOpacity(0.2),
+                          spreadRadius: 2,
+                          blurRadius: 5,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
                     child: Row(
                       children: [
@@ -122,9 +140,9 @@ class _SettingsPageState extends State<SettingsPage> {
                         
                         // Edit Button
                         IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.white),
+                          icon: const Icon(Icons.edit, color: Color.fromARGB(255, 255, 253, 253)),
                           onPressed: () {
-                            // Navigate to profile page using the class directly
+                            // Navigate to profile page
                             Navigator.push(
                               context,
                               MaterialPageRoute(builder: (context) => const ProfilePage()),
@@ -135,7 +153,150 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                   ),
                   
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 15),
+                  
+                  // Quiz Score Card - Enhanced
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 246, 242, 228),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.purple.withOpacity(0.2),
+                          spreadRadius: 2,
+                          blurRadius: 5,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                      border: Border.all(
+                        color: const Color.fromARGB(255, 241, 178, 199),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.quiz, color: Colors.purple),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Quiz Progress',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color.fromARGB(255, 15, 15, 15),
+                              ),
+                            ),
+                            const Spacer(),
+                            if (latestScore != null)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.purple.withOpacity(0.1),
+                                      spreadRadius: 1,
+                                      blurRadius: 2,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  '${latestScore.correctAnswers}/50',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.purple,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        if (latestScore != null) ...[
+                          const SizedBox(height: 12),
+                          // Progress bar
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: LinearProgressIndicator(
+                              value: latestScore.correctAnswers / latestScore.totalQuestions,
+                              minHeight: 10,
+                              backgroundColor: Colors.grey.shade200,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                latestScore.correctAnswers / latestScore.totalQuestions >= 0.7
+                                    ? Colors.green
+                                    : latestScore.correctAnswers / latestScore.totalQuestions >= 0.4
+                                        ? Colors.orange
+                                        : Colors.red,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Text(
+                                latestScore.isCompleted 
+                                    ? 'Quiz completed!' 
+                                    : 'Quiz in progress',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  fontStyle: FontStyle.italic,
+                                  color: latestScore.isCompleted 
+                                      ? Colors.green[700]
+                                      : Colors.orange[700],
+                                ),
+                              ),
+                              const Spacer(),
+                              Text(
+                                DateFormat('MMM d, y').format(latestScore.timestamp),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ] else ...[
+                          const SizedBox(height: 8),
+                          const Text(
+                            'No quiz data available yet',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontStyle: FontStyle.italic,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              // Navigate to quiz screen
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const QuizScreen()),
+                              );
+                            },
+                            icon: const Icon(Icons.play_arrow),
+                            label: const Text('Start Quiz'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.purple.shade200,
+                              foregroundColor: Colors.black87,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 15),
                   
                   // Notifications toggle
                   Container(
@@ -144,6 +305,18 @@ class _SettingsPageState extends State<SettingsPage> {
                     decoration: BoxDecoration(
                       color: const Color.fromARGB(255, 220, 233, 244),
                       borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color.fromARGB(255, 160, 200, 230),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.15),
+                          spreadRadius: 2,
+                          blurRadius: 5,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -170,7 +343,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                   ),
                   
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 15),
                   
                   // Terms of Service container
                   Container(
@@ -179,6 +352,18 @@ class _SettingsPageState extends State<SettingsPage> {
                     decoration: BoxDecoration(
                       color: const Color.fromARGB(255, 235, 249, 217),
                       borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color.fromARGB(255, 200, 230, 170),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.green.withOpacity(0.15),
+                          spreadRadius: 2,
+                          blurRadius: 5,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
                     child: InkWell(
                       onTap: () {
@@ -214,7 +399,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     alignment: Alignment.center,
                     child: Container(
                       width: 120,
-                      margin: const EdgeInsets.only(bottom: 220),
+                      margin: const EdgeInsets.only(bottom: 160),
                       child: ElevatedButton(
                         onPressed: () async {
                           // Sign out with Firebase
